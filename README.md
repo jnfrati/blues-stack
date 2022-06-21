@@ -1,6 +1,12 @@
 # Remix Blues Stack
 
+![The Remix Blues Stack](https://repository-images.githubusercontent.com/461012689/37d5bd8b-fa9c-4ab0-893c-f0a199d5012d)
+
 Learn more about [Remix Stacks](https://remix.run/stacks).
+
+```
+npx create-remix --template remix-run/blues-stack
+```
 
 ## What's in the stack
 
@@ -10,66 +16,56 @@ Learn more about [Remix Stacks](https://remix.run/stacks).
 - [GitHub Actions](https://github.com/features/actions) for deploy on merge to production and staging environments
 - Email/Password Authentication with [cookie-based sessions](https://remix.run/docs/en/v1/api/remix#createcookiesessionstorage)
 - Database ORM with [Prisma](https://prisma.io)
+- Styling with [Tailwind](https://tailwindcss.com/)
 - End-to-end testing with [Cypress](https://cypress.io)
 - Local third party request mocking with [MSW](https://mswjs.io)
-- Unit testing with [Vitest](https://vitest.dev)
-- Code formatting with [prettier](https://prettier.io)
+- Unit testing with [Vitest](https://vitest.dev) and [Testing Library](https://testing-library.com)
+- Code formatting with [Prettier](https://prettier.io)
 - Linting with [ESLint](https://eslint.org)
 - Static Types with [TypeScript](https://typescriptlang.org)
 
-## Fly Setup
-
-1. [Install Fly](https://fly.io/docs/getting-started/installing-flyctl/)
-
-2. Sign up and log in to Fly
-
-```sh
-fly auth signup
-```
-
-## The Database
-
-In development, it's better to use a local database, The easiest way to do this is using [Docker](https://www.docker.com/get-started). To start your postgres database, first make sure you have docker running, then run the following command:
-
-```sh
-docker-compose up
-```
-
-That may take a moment to start up as it needs to get the postgres image from the Docker registry, after it's done, you'll need to migrate your database. With the database ready to accept connections, open a new tab and run this:
-
-```sh
-npx prisma migrate deploy
-```
-
-When this finishes successfully, it will say:
-
-> All migrations have been successfully applied.
-
-If you'd prefer not to use Docker, you can also use Fly's Wireguard VPN to connect to a development database (or even your production database). You can find the instructions to set up Wireguard [here](https://fly.io/docs/reference/private-networking/#install-your-wireguard-app), and the instructions for creating a development database [here](https://fly.io/docs/reference/postgres/).
-
-## Build
-
-To run the production build for the app, run the following script:
-
-```sh
-npm run build
-```
-
-This should take less than a second ⚡
+Not a fan of bits of the stack? Fork it, change it, and use `npx create-remix --template your/repo`! Make it your own.
 
 ## Development
 
-With your postgres database up and running in one tab and setup with tables for your data model via prisma, you're ready to start the dev server. Run this in a new tab in your terminal:
+- Start the Postgres Database in [Docker](https://www.docker.com/get-started):
 
-```sh
-npm run dev
-```
+  ```sh
+  npm run docker
+  ```
+
+  > **Note:** The npm script will complete while Docker sets up the container in the background. Ensure that Docker has finished and your container is running before proceeding.
+
+- Initial setup:
+
+  ```sh
+  npm run setup
+  ```
+
+- Run the first build:
+
+  ```sh
+  npm run build
+  ```
+
+- Start dev server:
+
+  ```sh
+  npm run dev
+  ```
 
 This starts your app in development mode, rebuilding assets on file changes.
 
-This is a pretty simple note-taking app, but it's a good example of how you can build a full stack app with Prisma and Remix. The main functionality is creating users, logging in and out, and creating and deleting notes.
+The database seed script creates a new user with some data you can use to get started:
+
+- Email: `rachel@remix.run`
+- Password: `racheliscool`
+
+If you'd prefer not to use Docker, you can also use Fly's Wireguard VPN to connect to a development database (or even your production database). You can find the instructions to set up Wireguard [here](https://fly.io/docs/reference/private-networking/#install-your-wireguard-app), and the instructions for creating a development database [here](https://fly.io/docs/reference/postgres/).
 
 ### Relevant code:
+
+This is a pretty simple note-taking app, but it's a good example of how you can build a full stack app with Prisma and Remix. The main functionality is creating users, logging in and out, and creating and deleting notes.
 
 - creating users, and logging in and out [./app/models/user.server.ts](./app/models/user.server.ts)
 - user sessions, and verifying them [./app/session.server.ts](./app/session.server.ts)
@@ -77,25 +73,55 @@ This is a pretty simple note-taking app, but it's a good example of how you can 
 
 ## Deployment
 
-This Remix Stack comes with two GitHub actions that handle automatically deploying your app to production and staging environments.
+This Remix Stack comes with two GitHub Actions that handle automatically deploying your app to production and staging environments.
 
-Prior to your first deployment, you'll need to do a few thing:
+Prior to your first deployment, you'll need to do a few things:
 
-- Create a new [GitHub Repository](https://repo.new)
+- [Install Fly](https://fly.io/docs/getting-started/installing-flyctl/)
+
+- Sign up and log in to Fly
+
+  ```sh
+  fly auth signup
+  ```
+
+  > **Note:** If you have more than one Fly account, ensure that you are signed into the same account in the Fly CLI as you are in the browser. In your terminal, run `fly auth whoami` and ensure the email matches the Fly account signed into the browser.
 
 - Create two apps on Fly, one for staging and one for production:
 
   ```sh
-  fly create blues-stack-template-staging
   fly create blues-stack-template
+  fly create blues-stack-template-staging
   ```
 
-- Make sure you have a `FLY_API_TOKEN` added to your GitHub repo, to do this, go to your user settings on Fly and create a new [token](https://web.fly.io/user/personal_access_tokens/new), then add it to [your repo secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets) with the name `FLY_API_TOKEN`. Finally you'll need to add a `SESSION_SECRET` to your fly app secrets, to do this you can run the following commands:
+- Initialize Git.
 
   ```sh
-  fly secrets set SESSION_SECRET=$(openssl rand -hex 32) --app blues-stack-template-staging
-  fly secrets set SESSION_SECRET=$(openssl rand -hex 32) --app blues-stack-template
+  git init
   ```
+
+- Create a new [GitHub Repository](https://repo.new), and then add it as the remote for your project. **Do not push your app yet!**
+
+  ```sh
+  git remote add origin <ORIGIN_URL>
+  ```
+
+- Add a `FLY_API_TOKEN` to your GitHub repo. To do this, go to your user settings on Fly and create a new [token](https://web.fly.io/user/personal_access_tokens/new), then add it to [your repo secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets) with the name `FLY_API_TOKEN`.
+
+- Add a `SESSION_SECRET` to your fly app secrets, to do this you can run the following commands:
+
+  ```sh
+  fly secrets set SESSION_SECRET=$(openssl rand -hex 32) --app blues-stack-template
+  fly secrets set SESSION_SECRET=$(openssl rand -hex 32) --app blues-stack-template-staging
+  ```
+
+  > **Note:** When creating the staging secret, you may get a warning from the Fly CLI that looks like this:
+  >
+  > ```
+  > WARN app flag 'blues-stack-template-staging' does not match app name in config file 'blues-stack-template'
+  > ```
+  >
+  > This simply means that the current directory contains a config that references the production app we created in the first step. Ignore this warning and proceed to create the secret.
 
   If you don't have openssl installed, you can also use [1password](https://1password.com/generate-password) to generate a random secret, just replace `$(openssl rand -hex 32)` with the generated secret.
 
@@ -109,9 +135,13 @@ Prior to your first deployment, you'll need to do a few thing:
   fly postgres attach --postgres-app blues-stack-template-staging-db --app blues-stack-template-staging
   ```
 
-  Fly will take care of setting the DATABASE_URL secret for you.
+  > **Note:** You'll get the same warning for the same reason when attaching the staging database that you did in the `fly set secret` step above. No worries. Proceed!
+
+Fly will take care of setting the `DATABASE_URL` secret for you.
 
 Now that every is set up you can commit and push your changes to your repo. Every commit to your `main` branch will trigger a deployment to your production environment, and every commit to your `dev` branch will trigger a deployment to your staging environment.
+
+If you run into any issues deploying to Fly, make sure you've followed all of the steps above and if you have, then post as many details about your deployment (including your app name) to [the Fly support community](https://community.fly.io). They're normally pretty responsive over there and hopefully can help resolve any of your deployment issues and questions.
 
 ### Multi-region deploys
 
@@ -170,4 +200,4 @@ This project uses ESLint for linting. That is configured in `.eslintrc.js`.
 
 ### Formatting
 
-We use [prettier](https://prettier.io/) for auto-formatting in this project. It's recommended to install an editor plugin (like the [VSCode prettier plugin](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)) to get auto-formatting on save. There's also a `npm run format` script you can run to format all files in the project.
+We use [Prettier](https://prettier.io/) for auto-formatting in this project. It's recommended to install an editor plugin (like the [VSCode Prettier plugin](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)) to get auto-formatting on save. There's also a `npm run format` script you can run to format all files in the project.

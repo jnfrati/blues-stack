@@ -1,33 +1,36 @@
+import type {
+  LinksFunction,
+  LoaderFunction,
+  MetaFunction,
+} from "@remix-run/node";
+import { json } from "@remix-run/node";
 import {
-  json,
   Links,
   LiveReload,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
-} from "remix";
-import type { LinksFunction, MetaFunction, LoaderFunction } from "remix";
+} from "@remix-run/react";
 
-import appStyles from "./styles/app.css";
+import tailwindStylesheetUrl from "./styles/tailwind.css";
 import { getUser } from "./session.server";
 
 export const links: LinksFunction = () => {
-  return [{ rel: "stylesheet", href: appStyles }];
+  return [{ rel: "stylesheet", href: tailwindStylesheetUrl }];
 };
 
-export const meta: MetaFunction = () => {
-  return {
-    title: "Remix Notes",
-    viewport: "width=device-width,initial-scale=1",
-  };
-};
+export const meta: MetaFunction = () => ({
+  charset: "utf-8",
+  title: "Remix Notes",
+  viewport: "width=device-width,initial-scale=1",
+});
 
 type LoaderData = {
   user: Awaited<ReturnType<typeof getUser>>;
 };
 
-export let loader: LoaderFunction = async ({ request }) => {
+export const loader: LoaderFunction = async ({ request }) => {
   return json<LoaderData>({
     user: await getUser(request),
   });
@@ -35,16 +38,13 @@ export let loader: LoaderFunction = async ({ request }) => {
 
 export default function App() {
   return (
-    <html lang="en">
+    <html lang="en" className="h-full">
       <head>
-        <meta charSet="utf-8" />
         <Meta />
         <Links />
       </head>
-      <body>
-        <div>
-          <Outlet />
-        </div>
+      <body className="h-full">
+        <Outlet />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
